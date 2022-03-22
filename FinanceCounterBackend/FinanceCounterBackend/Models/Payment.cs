@@ -8,13 +8,13 @@ namespace FinanceCounterBackend.Models
 {
     public class Payment
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private double Ammount;
+        public double Ammount;
 
-        private Category category;
+        public Category category;
 
         [DataType(DataType.Date)]
-        private DateTime Date { get; set; }
+        public DateTime Date { get; set; }
     }
 }

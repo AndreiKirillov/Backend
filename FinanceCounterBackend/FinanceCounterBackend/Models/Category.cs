@@ -7,10 +7,10 @@ namespace FinanceCounterBackend.Models
 {
     public class Category
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private string Name;
+        public string Name { get; set; }
 
-        
+
     }
 }
