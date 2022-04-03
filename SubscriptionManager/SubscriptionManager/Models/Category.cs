@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 
 namespace SubscriptionManager.Models
 {
-    public class User
+    public class Category
     {
         public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public ICollection<Subscription> Subs { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
     }
 }
