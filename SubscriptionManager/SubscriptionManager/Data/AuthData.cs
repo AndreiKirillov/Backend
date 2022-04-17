@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 
 namespace SubscriptionManager.Data
 {
-    public class SeedData
+    public class AuthData
     {
-       
+        public string Login { get; set; } = String.Empty;
 
+        public string Password { get; set; } = String.Empty;
     }
 }

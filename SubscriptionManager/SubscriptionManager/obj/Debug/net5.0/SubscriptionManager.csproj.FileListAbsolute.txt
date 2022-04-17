@@ -133,3 +133,4 @@ C:\repository\Web\Backend\SubscriptionManager\SubscriptionManager\obj\Debug\net5
 C:\repository\Web\Backend\SubscriptionManager\SubscriptionManager\obj\Debug\net5.0\ref\SubscriptionManager.dll
 C:\repository\Web\Backend\SubscriptionManager\SubscriptionManager\obj\Debug\net5.0\SubscriptionManager.pdb
 C:\repository\Web\Backend\SubscriptionManager\SubscriptionManager\obj\Debug\net5.0\SubscriptionManager.genruntimeconfig.cache
+C:\repository\Web\Backend\SubscriptionManager\SubscriptionManager\bin\Debug\net5.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll

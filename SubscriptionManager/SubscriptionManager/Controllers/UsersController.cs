@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Data;
 using SubscriptionManager.Models;
+using System.IdentityModel.Tokens;
+using System.Security.Cryptography;
 
 namespace SubscriptionManager.Controllers
 {
@@ -14,6 +16,7 @@ namespace SubscriptionManager.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
+        public static User user = new User();
         private readonly SubscriptionManagerContext _context;
 
         public UsersController(SubscriptionManagerContext context)
@@ -33,13 +36,55 @@ namespace SubscriptionManager.Controllers
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _context.User.FindAsync(id);
-
             if (user == null)
             {
                 return NotFound();
             }
 
             return user;
+        }
+
+        [HttpPost("registration")]
+        public async Task<ActionResult<User>> Register(AuthData request)
+        {
+            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
+            int count_of_username = (from Users in _context.User where request.Login == Users.Login select request.Login).Count();
+            if (count_of_username > 0)
+                return BadRequest("Username exist");
+            else
+            {
+                user.Login = request.Login;
+                user.PasswordHash = passwordHash;
+                user.PasswordSalt = passwordSalt;
+                await _context.User.AddAsync(user);
+                await _context.SaveChangesAsync();
+                return Ok(user);
+            }
+        }
+
+        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512())
+            {
+                passwordSalt = hmac.Key;
+                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            }
+        }
+
+        // GET: api/Users/5/Subscription/3
+        [HttpGet("{user_id}/Subscription/{sub_id}")]
+        public async Task<ActionResult<Subscription>> GetSubscriptionFromUser(int user_id, int sub_id)
+        {
+            var user = await _context.User.FindAsync(user_id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            Subscription subscription = user.GetSubscriptionByID(sub_id);
+            if (subscription == null)
+                return NotFound();
+            return subscription;
         }
 
         // PUT: api/Users/5

@@ -12,6 +12,8 @@ namespace SubscriptionManager.Data
         public SubscriptionManagerContext (DbContextOptions<SubscriptionManagerContext> options)
             : base(options)
         {
+            Database.EnsureDeleted();
+            Database.EnsureCreated();
         }
 
         public DbSet<SubscriptionManager.Models.Subscription> Subscription { get; set; }
@@ -22,7 +24,22 @@ namespace SubscriptionManager.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-           
+            modelBuilder.Entity<User>().Property(u => u.Id).ValueGeneratedOnAdd();
+            modelBuilder.Entity<Subscription>().Property(s => s.Id).ValueGeneratedOnAdd();
+            modelBuilder.Entity<Category>().Property(c => c.Id).ValueGeneratedOnAdd();
+
+            // Добавляем категории в бд
+            modelBuilder.Entity<Category>().HasData(new Category
+            { Id = 1, Title = "Music", Description = "This category is used for music services" });
+            modelBuilder.Entity<Category>().HasData(new Category
+            { Id = 2, Title = "Movies", Description = "This category is used for movies services" });
+            modelBuilder.Entity<Category>().HasData(new Category
+            { Id = 3, Title = "Job", Description = "This category is used for job services" });
+            modelBuilder.Entity<Category>().HasData(new Category
+            { Id = 4, Title = "Hobby", Description = "This category is used for different hobby services" });
+            modelBuilder.Entity<Category>().HasData(new Category
+            { Id = 5, Title = "Sport", Description = "This category is used for sport activities" });
+
         }
 
 
