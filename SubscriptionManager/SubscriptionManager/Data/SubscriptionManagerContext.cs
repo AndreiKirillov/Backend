@@ -12,15 +12,15 @@ namespace SubscriptionManager.Data
         public SubscriptionManagerContext (DbContextOptions<SubscriptionManagerContext> options)
             : base(options)
         {
-            Database.EnsureDeleted();
-            Database.EnsureCreated();
+            //Database.EnsureDeleted();
+            //Database.EnsureCreated();
         }
 
-        public DbSet<SubscriptionManager.Models.Subscription> Subscription { get; set; }
+        public DbSet<Subscription> Subscription { get; set; }
 
-        public DbSet<SubscriptionManager.Models.User> User { get; set; }
+        public DbSet<User> User { get; set; }
 
-        public DbSet<SubscriptionManager.Models.Category> Category { get; set; }
+        public DbSet<Category> Category { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

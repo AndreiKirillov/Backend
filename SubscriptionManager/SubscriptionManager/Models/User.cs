@@ -18,16 +18,26 @@ namespace SubscriptionManager.Models
 
         public byte[] PasswordSalt { get; set; }
 
-        [Required]
         public string FirstName { get; set; }
 
-        [Required]
         public string LastName { get; set; }
 
         [Required]
         public string Email { get; set; }
 
         public ICollection<Subscription> Subs { get; set; }
+
+        public User()
+        {
+            Id = 0;
+            Login = string.Empty;
+            PasswordHash = null;
+            PasswordSalt = null;
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            Email = string.Empty;
+            Subs = null;
+        }
 
         public Subscription GetSubscriptionByID(int id)
         {

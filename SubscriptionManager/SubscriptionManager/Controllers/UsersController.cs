@@ -44,33 +44,6 @@ namespace SubscriptionManager.Controllers
             return user;
         }
 
-        [HttpPost("registration")]
-        public async Task<ActionResult<User>> Register(AuthData request)
-        {
-            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
-            int count_of_username = (from Users in _context.User where request.Login == Users.Login select request.Login).Count();
-            if (count_of_username > 0)
-                return BadRequest("Username exist");
-            else
-            {
-                user.Login = request.Login;
-                user.PasswordHash = passwordHash;
-                user.PasswordSalt = passwordSalt;
-                await _context.User.AddAsync(user);
-                await _context.SaveChangesAsync();
-                return Ok(user);
-            }
-        }
-
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-            }
-        }
-
         // GET: api/Users/5/Subscription/3
         [HttpGet("{user_id}/Subscription/{sub_id}")]
         public async Task<ActionResult<Subscription>> GetSubscriptionFromUser(int user_id, int sub_id)

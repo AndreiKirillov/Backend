@@ -27,47 +27,53 @@ namespace SubscriptionManager.Controllers
     {
         public static User user = new User();
         private readonly SubscriptionManagerContext _context;
-        //private readonly IConfiguration _configuration;
-       // private readonly IUserService _userService;
 
         public AuthController(SubscriptionManagerContext context)
         {
             _context = context;
         }
 
-        //[HttpGet, Authorize]
-        //public ActionResult<string> GetMe()
-        //{
-        //    var userName = _userService.GetMyName();
-        //    return Ok(userName);
-        //}
-
-        [HttpPost("register")]    // Регистрация пользователя
+        [HttpPost("registration")]    // Регистрация пользователя
         public async Task<ActionResult<User>> Register(AuthData request)
         {
+            if(_context.User.Any())
+            {
+                if (_context.User.First(u => u.Login == request.Login) != null)
+                {                                                               // Если уже есть юзер с таким логином
+                    return BadRequest("User with this login already exists!");
+                }
+                if (_context.User.First(u => u.Email == request.Email) != null)
+                {                                                               // Если уже есть юзер с такой почтой
+                    return BadRequest("User with this E-mail already exists!");
+                }
+            }
+
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);  // шифруем пароль
 
             User new_user = new User();            // создаем юзера
             new_user.Login = request.Login;
             new_user.PasswordHash = passwordHash;
             new_user.PasswordSalt = passwordSalt;
-
-            _context.User.Add(new_user);          // добавляем зарегистрированного юзера в бд
+            new_user.Email = request.Email;
+            _context.User.AddAsync(new_user);          // добавляем зарегистрированного юзера в бд
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = new_user.Id }, new_user);
+            return Ok(new_user);
         }
 
         [HttpPost("login")]              // Вход юзера в систему
         public async Task<ActionResult<string>> Login(AuthData request)
         {
-            var user = _context.User.First(u => u.Login == request.Login);
+            if (!_context.User.Any())
+                return "no elements!";
+
+            var user = _context.User.First(u => u.Login == request.Login);  // Идентификация юзера
             if (user == null)
             {
                 return BadRequest("User not found!");
             }
 
-            if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+            if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt)) // Аутентификация
             {
                 return BadRequest("Wrong password!");
             }
@@ -76,29 +82,28 @@ namespace SubscriptionManager.Controllers
             return Ok(token);
         }
 
+        // Функция создания jwt токена
         private string CreateToken(User user)
         {
             List<Claim> claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.Name, user.Login)
             };
-
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
-                _configuration.GetSection("AppSettings:Token").Value));
+            var key = Auth.AuthOptions.GetSymmetricSecurityKey();
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddDays(1),
+                expires: DateTime.Now.AddHours(2),
                 signingCredentials: creds);
 
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
-            return jwt;
+                return jwt;
         }
-
+        
+        // Функция шифрования пароля
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             using (var hmac = new HMACSHA512())
@@ -108,6 +113,7 @@ namespace SubscriptionManager.Controllers
             }
         }
 
+        // Функция проверки пароля
         private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
         {
             using (var hmac = new HMACSHA512(passwordSalt))
