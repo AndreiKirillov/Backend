@@ -33,20 +33,57 @@ namespace SubscriptionManager.Controllers
             _context = context;
         }
 
+        private bool CheckEmail(string email)
+        {
+            if (!(email.Contains("@gmail.com") || email.Contains("@yandex.ru") || email.Contains("@mail.ru") ||
+                email.Contains("@asugubkin.ru") || 
+                (email.Contains("@") && email.Contains(".com")) ||
+                (email.Contains("@") && email.Contains(".ru"))
+                ))
+                return false;
+
+            return true;
+        }
+
+        //private async Task<ActionResult> AuthDataIsOK(AuthData request)
+        //{
+        //    if (_context.User.Any())
+        //    {
+        //        if (_context.User.FirstOrDefault(u => u.Login == request.Login) != null)
+        //        {                                                               // Если уже есть юзер с таким логином
+        //            return BadRequest("User with this login already exists!");
+        //        }
+        //        if (_context.User.FirstOrDefault(u => u.Email == request.Email) != null)
+        //        {                                                               // Если уже есть юзер с такой почтой
+        //            return BadRequest("User with this E-mail already exists!");
+        //        }
+        //    }
+
+        //    if (request.Password.Length < 8)
+        //        return BadRequest("The password is too short!");
+
+        //    return Ok();
+        //}
+
         [HttpPost("registration")]    // Регистрация пользователя
         public async Task<ActionResult<User>> Register(AuthData request)
         {
             if(_context.User.Any())
             {
-                if (_context.User.First(u => u.Login == request.Login) != null)
+                if (_context.User.FirstOrDefault(u => u.Login == request.Login) != null)
                 {                                                               // Если уже есть юзер с таким логином
                     return BadRequest("User with this login already exists!");
                 }
-                if (_context.User.First(u => u.Email == request.Email) != null)
+                if (_context.User.FirstOrDefault(u => u.Email == request.Email) != null)
                 {                                                               // Если уже есть юзер с такой почтой
                     return BadRequest("User with this E-mail already exists!");
                 }
             }
+
+            if(request.Password.Length < 8)                        
+                return BadRequest("The password is too short!");
+            if(!CheckEmail(request.Email))
+                return BadRequest("Email is incorrect!");
 
             CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);  // шифруем пароль
 
@@ -67,7 +104,7 @@ namespace SubscriptionManager.Controllers
             if (!_context.User.Any())
                 return "no elements!";
 
-            var user = _context.User.First(u => u.Login == request.Login);  // Идентификация юзера
+            var user = _context.User.FirstOrDefault(u => u.Login == request.Login);  // Идентификация юзера
             if (user == null)
             {
                 return BadRequest("User not found!");

@@ -65,6 +65,7 @@ namespace SubscriptionManager
             services.AddDbContext<SubscriptionManagerContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("SubscriptionManagerContext")));
             
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
