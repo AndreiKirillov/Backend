@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Data;
 using SubscriptionManager.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SubscriptionManager.Controllers
 {
@@ -22,13 +23,24 @@ namespace SubscriptionManager.Controllers
         }
 
         // GET: api/Subscriptions
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Subscription>>> GetSubscription()
         {
-            return await _context.Subscription.ToListAsync();
+            //var query =
+            //    from user in _context.User.ToList()
+            //    join subs in _context.Subscription.ToList()
+            //    on user.Subs equals subs.Id;
+
+
+            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
+
+
+            return  user.Subs.ToList();
         }
 
         // GET: api/Subscriptions/5
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<ActionResult<Subscription>> GetSubscription(int id)
         {
@@ -75,13 +87,23 @@ namespace SubscriptionManager.Controllers
 
         // POST: api/Subscriptions
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [Authorize]
+        [HttpPost("add")]
         public async Task<ActionResult<Subscription>> PostSubscription(Subscription subscription)
         {
+            if (subscription.ServiceName == null)
+                return BadRequest("Not enough data in request!");
+
+            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
+
+            _context.Category.IgnoreAutoIncludes();
+
+            user.Subs.Add(subscription);
+
             _context.Subscription.Add(subscription);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetSubscription", new { id = subscription.Id }, subscription);
+            return Ok(subscription);
         }
 
         // DELETE: api/Subscriptions/5

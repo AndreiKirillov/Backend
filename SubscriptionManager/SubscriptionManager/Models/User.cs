@@ -25,7 +25,7 @@ namespace SubscriptionManager.Models
         [Required]
         public string Email { get; set; }
 
-        public ICollection<Subscription> Subs { get; set; }
+        public List<Subscription> Subs { get; set; }
 
         public User()
         {
@@ -36,7 +36,7 @@ namespace SubscriptionManager.Models
             FirstName = string.Empty;
             LastName = string.Empty;
             Email = string.Empty;
-            Subs = null;
+            Subs = new List<Subscription>(0);
         }
 
         public Subscription GetSubscriptionByID(int id)

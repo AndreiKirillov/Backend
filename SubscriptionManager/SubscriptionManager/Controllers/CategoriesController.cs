@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Data;
 using SubscriptionManager.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SubscriptionManager.Controllers
 {

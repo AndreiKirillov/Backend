@@ -10,8 +10,8 @@ using SubscriptionManager.Data;
 namespace SubscriptionManager.Migrations
 {
     [DbContext(typeof(SubscriptionManagerContext))]
-    [Migration("20220403185900_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20220419211458_SubscriptionManagerDB")]
+    partial class SubscriptionManagerDB
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -32,11 +32,44 @@ namespace SubscriptionManager.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Category");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "This category is used for music services",
+                            Title = "Music"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "This category is used for movies services",
+                            Title = "Movies"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "This category is used for job services",
+                            Title = "Job"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Description = "This category is used for different hobby services",
+                            Title = "Hobby"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Description = "This category is used for sport activities",
+                            Title = "Sport"
+                        });
                 });
 
             modelBuilder.Entity("SubscriptionManager.Models.Subscription", b =>
@@ -53,6 +86,7 @@ namespace SubscriptionManager.Migrations
                         .HasColumnType("float");
 
                     b.Property<string>("ServiceName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("UserId")
@@ -77,11 +111,24 @@ namespace SubscriptionManager.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Login")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("PasswordHash")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<byte[]>("PasswordSalt")
+                        .HasColumnType("varbinary(max)");
 
                     b.HasKey("Id");
 

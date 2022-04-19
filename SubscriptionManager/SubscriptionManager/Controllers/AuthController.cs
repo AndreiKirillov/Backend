@@ -122,15 +122,20 @@ namespace SubscriptionManager.Controllers
         // Функция создания jwt токена
         private string CreateToken(User user)
         {
-            List<Claim> claims = new List<Claim>
+            List<Claim> claims = new List<Claim>()
             {
+                new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.Login)
             };
             var key = Auth.AuthOptions.GetSymmetricSecurityKey();
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
+            var now = DateTime.UtcNow;
             var token = new JwtSecurityToken(
+                issuer: AuthOptions.Issuer,
+                audience: AuthOptions.Audience,
+                notBefore: now,
                 claims: claims,
                 expires: DateTime.Now.AddHours(2),
                 signingCredentials: creds);

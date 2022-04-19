@@ -24,26 +24,6 @@ namespace SubscriptionManager.Controllers
             _context = context;
         }
 
-        // GET: api/Users
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUser()
-        {
-            return await _context.User.ToListAsync();
-        }
-
-        // GET: api/Users/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
-        {
-            var user = await _context.User.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return user;
-        }
-
         // GET: api/Users/5/Subscription/3
         [HttpGet("{user_id}/Subscription/{sub_id}")]
         public async Task<ActionResult<Subscription>> GetSubscriptionFromUser(int user_id, int sub_id)
