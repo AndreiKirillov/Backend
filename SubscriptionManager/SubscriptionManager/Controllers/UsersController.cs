@@ -7,8 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Data;
 using SubscriptionManager.Models;
+using SubscriptionManager.Services;
 using System.IdentityModel.Tokens;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Authorization;
 
 namespace SubscriptionManager.Controllers
 {
@@ -31,21 +33,47 @@ namespace SubscriptionManager.Controllers
             return await _context.User.ToListAsync();
         }
 
-        // GET: api/Users/5/Subscription/3
-        [HttpGet("{user_id}/Subscription/{sub_id}")]
-        public async Task<ActionResult<Subscription>> GetSubscriptionFromUser(int user_id, int sub_id)
+        // POST: api/Users/forgot_password
+        [Authorize]
+        [HttpPost("forgot_password")]
+        public async Task<IActionResult> RemindPassword(string email)
         {
-            var user = await _context.User.FindAsync(user_id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
+            if (user.Email != email)
+                return BadRequest("Wrong E-mail!");
 
-            Subscription subscription = user.GetSubscriptionByID(sub_id);
-            if (subscription == null)
-                return NotFound();
-            return subscription;
+            // Send link to change password to email
+
+            return Ok();
         }
+
+        // PUT: api/Users/change_password
+        [Authorize]
+        [HttpPut("change_password")]
+        public async Task<IActionResult> ChangePassword(string old_password, string new_password)
+        {
+            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
+
+            // Проверяем старый пароль
+            if (!AuthServices.VerifyPasswordHash(old_password, user.PasswordHash, user.PasswordSalt))  
+                return BadRequest("Wrong E-mail!");
+
+            // Устанавливаем новый
+            if (new_password.Length < 8)
+                return BadRequest("The password is too short!");
+
+            AuthServices.CreatePasswordHash(new_password, out byte[] passwordHash, out byte[] passwordSalt);  // шифруем пароль
+
+            user.PasswordHash = passwordHash;
+            user.PasswordSalt = passwordSalt;
+
+            _context.Entry(user).State = EntityState.Modified;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
 
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -76,17 +104,6 @@ namespace SubscriptionManager.Controllers
             }
 
             return NoContent();
-        }
-
-        // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
-        {
-            _context.User.Add(user);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
         }
 
         // DELETE: api/Users/5

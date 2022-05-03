@@ -52,7 +52,7 @@ namespace SubscriptionManager.Controllers
             {
                 return BadRequest();
             }
-
+            
             _context.Entry(category).State = EntityState.Modified;
 
             try

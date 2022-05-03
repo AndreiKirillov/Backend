@@ -10,7 +10,7 @@ using SubscriptionManager.Auth;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using SubscriptionManager.Data;
-
+using SubscriptionManager.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -33,38 +33,6 @@ namespace SubscriptionManager.Controllers
             _context = context;
         }
 
-        private bool CheckEmail(string email)
-        {
-            if (!(email.Contains("@gmail.com") || email.Contains("@yandex.ru") || email.Contains("@mail.ru") ||
-                email.Contains("@asugubkin.ru") || 
-                (email.Contains("@") && email.Contains(".com")) ||
-                (email.Contains("@") && email.Contains(".ru"))
-                ))
-                return false;
-
-            return true;
-        }
-
-        //private async Task<ActionResult> AuthDataIsOK(AuthData request)
-        //{
-        //    if (_context.User.Any())
-        //    {
-        //        if (_context.User.FirstOrDefault(u => u.Login == request.Login) != null)
-        //        {                                                               // Если уже есть юзер с таким логином
-        //            return BadRequest("User with this login already exists!");
-        //        }
-        //        if (_context.User.FirstOrDefault(u => u.Email == request.Email) != null)
-        //        {                                                               // Если уже есть юзер с такой почтой
-        //            return BadRequest("User with this E-mail already exists!");
-        //        }
-        //    }
-
-        //    if (request.Password.Length < 8)
-        //        return BadRequest("The password is too short!");
-
-        //    return Ok();
-        //}
-
         [HttpPost("registration")]    // Регистрация пользователя
         public async Task<ActionResult<User>> Register(AuthData request)
         {
@@ -82,10 +50,10 @@ namespace SubscriptionManager.Controllers
 
             if(request.Password.Length < 8)                        
                 return BadRequest("The password is too short!");
-            if(!CheckEmail(request.Email))
+            if(!AuthServices.CheckEmail(request.Email))
                 return BadRequest("Email is incorrect!");
 
-            CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);  // шифруем пароль
+            AuthServices.CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);  // шифруем пароль
 
             User new_user = new User();            // создаем юзера
             new_user.Login = request.Login;
@@ -110,59 +78,13 @@ namespace SubscriptionManager.Controllers
                 return BadRequest("User not found!");
             }
 
-            if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt)) // Аутентификация
+            if (!AuthServices.VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt)) // Аутентификация
             {
                 return BadRequest("Wrong password!");
             }
 
-            string token = CreateToken(user);
+            string token = AuthServices.CreateToken(user);
             return Ok(token);
-        }
-
-        // Функция создания jwt токена
-        private string CreateToken(User user)
-        {
-            List<Claim> claims = new List<Claim>()
-            {
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.Login)
-            };
-            var key = Auth.AuthOptions.GetSymmetricSecurityKey();
-
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-
-            var now = DateTime.UtcNow;
-            var token = new JwtSecurityToken(
-                issuer: AuthOptions.Issuer,
-                audience: AuthOptions.Audience,
-                notBefore: now,
-                claims: claims,
-                expires: DateTime.Now.AddHours(2),
-                signingCredentials: creds);
-
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-                return jwt;
-        }
-        
-        // Функция шифрования пароля
-        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-            }
-        }
-
-        // Функция проверки пароля
-        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
-        {
-            using (var hmac = new HMACSHA512(passwordSalt))
-            {
-                var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-                return computedHash.SequenceEqual(passwordHash);
-            }
         }
     }
 }
