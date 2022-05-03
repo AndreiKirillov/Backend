@@ -28,7 +28,7 @@ namespace SubscriptionManager.Controllers
         [HttpGet]            // Получение всех подписок юзера
         public async Task<ActionResult<IEnumerable<Subscription>>> GetSubscription()
         {
-            var user = _context.User.Where(u => u.Login == HttpContext.User.Identity.Name).FirstOrDefault();
+            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
 
             var subs = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
 
@@ -46,9 +46,10 @@ namespace SubscriptionManager.Controllers
             var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
 
             var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
+            if (subs_list == null)
+                return NotFound();
 
             var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
-
 
             if (subscription == null)
                 return NotFound();
@@ -76,36 +77,28 @@ namespace SubscriptionManager.Controllers
             return Ok(subscription);
         }
 
-        // PUT: api/Subscriptions/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // PUT: api/Subscriptions/pay/5
         [Authorize]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutSubscription(int id, Subscription subscription)
+        [HttpPut("pay/{id}")]            // Метод оплаты подписки
+        public async Task<IActionResult> MakePayment(int id)
         {
-            if (id != subscription.Id)
-            {
-                return BadRequest();
-            }
+            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
+
+            var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
+            if (subs_list == null)
+                return NotFound();
+
+            var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
+            if (subscription == null)
+                return NotFound();
+
+            SubscriptionService.RefreshSubscription(ref subscription);      // обновляем данные
 
             _context.Entry(subscription).State = EntityState.Modified;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!SubscriptionExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            await _context.SaveChangesAsync();
+          
+            return Ok();
         }
 
         // POST: api/Subscriptions/add

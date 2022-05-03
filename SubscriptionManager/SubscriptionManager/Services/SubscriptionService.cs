@@ -25,5 +25,25 @@ namespace SubscriptionManager.Services
             return result;
         }
 
+        public static void RefreshSubscription(ref Subscription sub)
+        {
+            if (sub == null)
+                throw new Exception("Empty input data!");
+
+            sub.PaymentDate = sub.PaymentDate.AddMonths(1);
+        }
+
+        public static void RefreshAllSubscriptions(ref List<Subscription> subs)
+        {
+            if (subs.Count < 1)
+                throw new Exception("Empty input data!");
+
+            foreach (var sub in subs)
+            {
+                if (sub.PaymentDate < DateTime.Today)     // 
+                    sub.PaymentDate = sub.PaymentDate.AddMonths(1);          
+            }
+        }
+
     }
 }
