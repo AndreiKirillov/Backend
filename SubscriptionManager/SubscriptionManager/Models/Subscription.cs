@@ -21,8 +21,20 @@ namespace SubscriptionManager.Models
         [Required]
         public double Price { get; set; }
 
+        public int UserID { get; set; }
+
         [JsonIgnore]
         public Category _Category { get; set; }
 
+
+        public Subscription()
+        {
+            Id = 0;
+            ServiceName = string.Empty;
+            PaymentDate = new DateTime();
+            Price = 0;
+            UserID = 0;
+            _Category = new Category();
+        }
     }
 }

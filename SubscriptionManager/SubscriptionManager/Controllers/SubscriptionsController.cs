@@ -24,38 +24,40 @@ namespace SubscriptionManager.Controllers
 
         // GET: api/Subscriptions
         [Authorize]
-        [HttpGet]
+        [HttpGet]            // Получение всех подписок юзера
         public async Task<ActionResult<IEnumerable<Subscription>>> GetSubscription()
         {
-            //var query =
-            //    from user in _context.User.ToList()
-            //    join subs in _context.Subscription.ToList()
-            //    on user.Subs equals subs.Id;
+            var user = _context.User.Where(u => u.Login == HttpContext.User.Identity.Name).FirstOrDefault();
 
+            var subs = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
 
-            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
+            if (subs == null)
+                return NotFound();
 
-
-            return  user.Subs.ToList();
+            return Ok(subs);
         }
 
         // GET: api/Subscriptions/5
         [Authorize]
-        [HttpGet("{id}")]
+        [HttpGet("{id}")]       // запрос на конкретную подписку юзера
         public async Task<ActionResult<Subscription>> GetSubscription(int id)
         {
-            var subscription = await _context.Subscription.FindAsync(id);
+            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
+
+            var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
+
+            var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
+
 
             if (subscription == null)
-            {
                 return NotFound();
-            }
 
-            return subscription;
+            return Ok(subscription);
         }
 
         // PUT: api/Subscriptions/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutSubscription(int id, Subscription subscription)
         {
@@ -85,10 +87,9 @@ namespace SubscriptionManager.Controllers
             return NoContent();
         }
 
-        // POST: api/Subscriptions
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // POST: api/Subscriptions/add
         [Authorize]
-        [HttpPost("add")]
+        [HttpPost("add")]      // Добавление подписки 
         public async Task<ActionResult<Subscription>> PostSubscription(Subscription subscription)
         {
             if (subscription.ServiceName == null)
@@ -98,6 +99,8 @@ namespace SubscriptionManager.Controllers
 
             _context.Category.IgnoreAutoIncludes();
 
+            subscription.UserID = user.Id;
+
             user.Subs.Add(subscription);
 
             _context.Subscription.Add(subscription);
@@ -106,11 +109,17 @@ namespace SubscriptionManager.Controllers
             return Ok(subscription);
         }
 
-        // DELETE: api/Subscriptions/5
-        [HttpDelete("{id}")]
+        // DELETE: api/Subscriptions/delete/5
+        [Authorize]
+        [HttpDelete("delete/{id}")]           // Удаление подписки
         public async Task<IActionResult> DeleteSubscription(int id)
         {
-            var subscription = await _context.Subscription.FindAsync(id);
+            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
+
+            var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
+
+            var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
+
             if (subscription == null)
             {
                 return NotFound();
