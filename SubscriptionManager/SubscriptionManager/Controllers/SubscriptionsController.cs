@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SubscriptionManager.Data;
 using SubscriptionManager.Models;
+using SubscriptionManager.Services;
 using Microsoft.AspNetCore.Authorization;
 
 namespace SubscriptionManager.Controllers
@@ -48,6 +49,26 @@ namespace SubscriptionManager.Controllers
 
             var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
 
+
+            if (subscription == null)
+                return NotFound();
+
+            return Ok(subscription);
+        }
+
+        // GET: api/Subscriptions/nearest
+        [Authorize]
+        [HttpGet("nearest")]       // запрос на конкретную подписку юзера
+        public async Task<ActionResult<Subscription>> GetNearest()
+        {
+            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
+
+            var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
+
+            if (subs_list == null)
+                return NotFound();
+
+            var subscription = SubscriptionService.GetNearestSubscription(subs_list);
 
             if (subscription == null)
                 return NotFound();
@@ -100,6 +121,8 @@ namespace SubscriptionManager.Controllers
             _context.Category.IgnoreAutoIncludes();
 
             subscription.UserID = user.Id;
+
+            subscription.PaymentDate.AddMonths(1); // рассчитываем дату следующего платежа
 
             user.Subs.Add(subscription);
 
