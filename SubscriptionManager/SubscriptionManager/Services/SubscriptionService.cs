@@ -25,6 +25,22 @@ namespace SubscriptionManager.Services
             return result;
         }
 
+        public static List<Subscription> GetDebtSubscriptions(List<Subscription> subs)
+        {
+            if (subs.Count < 1)
+                throw new Exception("Empty input data!");
+
+            List<Subscription> debt_subs = new List<Subscription>();
+
+            foreach(var sub in subs)
+            {
+                if (sub.PaymentDate < DateTime.Today)
+                    debt_subs.Add(sub);
+            }
+
+            return debt_subs;
+        }
+
         public static void RefreshSubscription(ref Subscription sub)
         {
             if (sub == null)

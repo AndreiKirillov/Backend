@@ -77,28 +77,24 @@ namespace SubscriptionManager.Controllers
             return Ok(subscription);
         }
 
-        // PUT: api/Subscriptions/pay/5
+        // GET: api/Subscriptions/debt
         [Authorize]
-        [HttpPut("pay/{id}")]            // Метод оплаты подписки
-        public async Task<IActionResult> MakePayment(int id)
+        [HttpGet("debt")]       // запрос на получение просроченных подписок
+        public async Task<ActionResult<Subscription>> GetDebt()
         {
             var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
 
             var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
+
             if (subs_list == null)
                 return NotFound();
 
-            var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
-            if (subscription == null)
+            var debt_subs = SubscriptionService.GetDebtSubscriptions(subs_list);
+
+            if (debt_subs == null)
                 return NotFound();
 
-            SubscriptionService.RefreshSubscription(ref subscription);      // обновляем данные
-
-            _context.Entry(subscription).State = EntityState.Modified;
-
-            await _context.SaveChangesAsync();
-          
-            return Ok();
+            return Ok(debt_subs);
         }
 
         // POST: api/Subscriptions/add
@@ -123,6 +119,60 @@ namespace SubscriptionManager.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(subscription);
+        }
+
+        // PUT: api/Subscriptions/pay/5
+        [Authorize]
+        [HttpPut("pay/{id}")]            // Метод оплаты подписки
+        public async Task<IActionResult> MakePayment(int id)
+        {
+            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
+
+            var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
+            if (subs_list == null)
+                return NotFound();
+
+            var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
+            if (subscription == null)
+                return NotFound();
+
+            SubscriptionService.RefreshSubscription(ref subscription);      // обновляем данные
+
+            _context.Entry(subscription).State = EntityState.Modified;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        // PUT: api/Subscriptions/AddCategory/5
+        [Authorize]
+        [HttpPut("AddCategory/{id}&&{category_id}")]            // добавление категории к подписке
+        public async Task<IActionResult> AddCategory(int id, int category_id)
+        {
+            var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
+
+            // ищем подписку
+            var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
+            if (subs_list == null)
+                return NotFound();
+
+            var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
+            if (subscription == null)
+                return NotFound();
+
+            // ищем категорию
+            var category = _context.Category.Where(c => c.Id == category_id).FirstOrDefault();
+            if (category == null)
+                return BadRequest();
+
+            subscription._Category = category;
+
+            _context.Entry(subscription).State = EntityState.Modified;
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
         }
 
         // DELETE: api/Subscriptions/delete/5
