@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
+using SubscriptionManager.Data;
+using SubscriptionManager.Services;
 
 namespace SubscriptionManager.Models
 {
@@ -39,9 +41,19 @@ namespace SubscriptionManager.Models
             Subs = new List<Subscription>(0);
         }
 
-        public Subscription GetSubscriptionByID(int id)
+        public User(AuthData auth_data)
         {
-            return Subs.FirstOrDefault(s => s.Id == id);
+            Id = 0;
+            Login = auth_data.Login;
+
+            AuthServices.CreatePasswordHash(auth_data.Password, out byte[] passwordHash, out byte[] passwordSalt);  // шифруем пароль
+            PasswordHash = passwordHash;
+            PasswordSalt = passwordSalt;
+            
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            Email = auth_data.Email;
+            Subs = new List<Subscription>(0);
         }
     }
 }

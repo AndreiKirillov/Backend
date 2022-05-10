@@ -26,15 +26,13 @@ namespace SubscriptionManager.Controllers
         // GET: api/Subscriptions
         [Authorize]
         [HttpGet]            // Получение всех подписок юзера
-        public async Task<ActionResult<IEnumerable<Subscription>>> GetSubscription()
+        public ActionResult<IEnumerable<Subscription>> GetSubscription()
         {
             var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
 
-            var subs = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
-
-            if (subs == null)
-                return NotFound();
-
+            if (user == null)
+                return NotFound(new List<Subscription>());
+            var subs = _context.Subscription.Where(s => s.UserID == user.Id);
             return Ok(subs);
         }
 
@@ -47,12 +45,12 @@ namespace SubscriptionManager.Controllers
 
             var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
             if (subs_list == null)
-                return NotFound();
+                return NotFound(new List<Subscription>());
 
             var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
 
             if (subscription == null)
-                return NotFound();
+                return NotFound(new Subscription());
 
             return Ok(subscription);
         }
@@ -67,12 +65,12 @@ namespace SubscriptionManager.Controllers
             var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
 
             if (subs_list == null)
-                return NotFound();
+                return NotFound(new List<Subscription>());
 
             var subscription = SubscriptionService.GetNearestSubscription(subs_list);
 
             if (subscription == null)
-                return NotFound();
+                return NotFound(new Subscription());
 
             return Ok(subscription);
         }
@@ -87,12 +85,12 @@ namespace SubscriptionManager.Controllers
             var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
 
             if (subs_list == null)
-                return NotFound();
+                return NotFound(new List<Subscription>());
 
             var debt_subs = SubscriptionService.GetDebtSubscriptions(subs_list);
 
             if (debt_subs == null)
-                return NotFound();
+                return NotFound(new List<Subscription>());
 
             return Ok(debt_subs);
         }
@@ -130,11 +128,11 @@ namespace SubscriptionManager.Controllers
 
             var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
             if (subs_list == null)
-                return NotFound();
+                return BadRequest("This subscription doesn't exist");
 
             var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
             if (subscription == null)
-                return NotFound();
+                return BadRequest("This subscription doesn't exist");
 
             SubscriptionService.RefreshSubscription(ref subscription);      // обновляем данные
 
@@ -155,16 +153,16 @@ namespace SubscriptionManager.Controllers
             // ищем подписку
             var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
             if (subs_list == null)
-                return NotFound();
+                return BadRequest("This subscription doesn't exist");
 
             var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
             if (subscription == null)
-                return NotFound();
+                return BadRequest("This subscription doesn't exist");
 
             // ищем категорию
             var category = _context.Category.Where(c => c.Id == category_id).FirstOrDefault();
             if (category == null)
-                return BadRequest();
+                return BadRequest("This category doesn't exist");
 
             subscription._Category = category;
 
@@ -183,23 +181,17 @@ namespace SubscriptionManager.Controllers
             var user = _context.User.Where(u => u.Login == User.Identity.Name).FirstOrDefault();
 
             var subs_list = await _context.Subscription.Where(s => s.UserID == user.Id).ToListAsync();
+            if (subs_list == null)
+                return BadRequest("This subscription doesn't exist");
 
             var subscription = subs_list.Where(s => s.Id == id).FirstOrDefault();
-
             if (subscription == null)
-            {
-                return NotFound();
-            }
+                return BadRequest("This subscription doesn't exist");
 
             _context.Subscription.Remove(subscription);
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool SubscriptionExists(int id)
-        {
-            return _context.Subscription.Any(e => e.Id == id);
         }
     }
 }

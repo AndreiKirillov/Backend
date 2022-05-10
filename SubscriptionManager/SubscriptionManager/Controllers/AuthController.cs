@@ -53,14 +53,9 @@ namespace SubscriptionManager.Controllers
             if(!AuthServices.CheckEmail(request.Email))
                 return BadRequest("Email is incorrect!");
 
-            AuthServices.CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);  // шифруем пароль
-
-            User new_user = new User();            // создаем юзера
-            new_user.Login = request.Login;
-            new_user.PasswordHash = passwordHash;
-            new_user.PasswordSalt = passwordSalt;
-            new_user.Email = request.Email;
-            _context.User.AddAsync(new_user);          // добавляем зарегистрированного юзера в бд
+            User new_user = new User(request);            // создаем юзера
+           
+            await _context.User.AddAsync(new_user);          // добавляем зарегистрированного юзера в бд
             await _context.SaveChangesAsync();
 
             return Ok(new_user);
